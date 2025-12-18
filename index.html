@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyMastery: Geometry Unit 3</title>
+    
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // ==========================================
+        // CURRICULUM DATA (Based on PDF Analysis)
+        // ==========================================
+        const curriculum = [
+            {
+                id: 'dilations',
+                title: 'Dilations & Scale Factors',
+                icon: '🔍',
+                description: 'Master enlargements, reductions, and calculating scale factors.',
+                theory: {
+                    intro: "A dilation transforms a shape by expanding or shrinking it from a center point. The size changes, but the shape remains similar.",
+                    rules: [
+                        { title: "Scale Factor (n)", text: "n = Image Length / Original Length" },
+                        { title: "Enlargement", text: "If n > 1, the image gets bigger." },
+                        { title: "Reduction", text: "If 0 < n < 1 (a fraction/decimal), the image gets smaller." }
+                    ],
+                    tip: "Always double-check your arithmetic! If the new shape is smaller, your scale factor MUST be less than 1."
+                },
+                visualizer: 'dilation',
+                questions: [
+                    {
+                        id: 'd1',
+                        text: "Triangle ABC has a side length of 8. After a dilation, the corresponding side on Triangle A'B'C' is 12. What is the scale factor, and is it an enlargement or reduction?",
+                        options: [
+                            "Scale factor 1.5; Enlargement",
+                            "Scale factor 0.66; Reduction",
+                            "Scale factor 4; Enlargement",
+                            "Scale factor 1.5; Reduction"
+                        ],
+                        correctIdx: 0,
+                        explanation: "Scale Factor = Image / Original. Here, 12 / 8 = 1.5. Since 1.5 > 1, it is an enlargement."
+                    },
+                    {
+                        id: 'd2',
+                        text: "A photo is 10 inches wide. You apply a scale factor of 1/2. What is the width of the new image?",
+                        options: [
+                            "20 inches",
+                            "5 inches",
+                            "10.5 inches",
+                            "2 inches"
+                        ],
+                        correctIdx: 1,
+                        explanation: "New Size = Original Size × Scale Factor. 10 × 0.5 = 5 inches."
+                    },
+                    {
+                        id: 'd3',
+                        text: "Which of the following scale factors represents a reduction?",
+                        options: [
+                            "n = 3/2",
+                            "n = 1.1",
+                            "n = 7",
+                            "n = 0.85"
+                        ],
+                        correctIdx: 3,
+                        explanation: "A reduction occurs when the scale factor is between 0 and 1. 0.85 fits this rule."
+                    }
+                ]
+            },
+            {
+                id: 'similarity',
+                title: 'Similarity & Ratios',
+                icon: '📐',
+                description: 'Understand how similar polygons relate through proportional sides.',
+                theory: {
+                    intro: "Two shapes are Similar if their corresponding angles are congruent and their corresponding sides are proportional.",
+                    rules: [
+                        { title: "Preserved Properties", text: "Angle measures do NOT change." },
+                        { title: "Changed Properties", text: "Side lengths change, but the Ratio remains constant." },
+                        { title: "Notation", text: "The symbol ~ means 'is similar to'." }
+                    ],
+                    tip: "Match the letters! If ΔABC ~ ΔXYZ, then AB corresponds to XY, and BC corresponds to YZ."
+                },
+                visualizer: 'ratio',
+                questions: [
+                    {
+                        id: 's1',
+                        text: "Triangle DEF is similar to Triangle GHI. Side DE = 6 and side GH = 18. What is the similarity ratio of DEF to GHI?",
+                        options: [
+                            "1:3",
+                            "3:1",
+                            "1:2",
+                            "1:6"
+                        ],
+                        correctIdx: 0,
+                        explanation: "The ratio is Side DE / Side GH = 6 / 18, which simplifies to 1/3 or 1:3."
+                    },
+                    {
+                        id: 's2',
+                        text: "Two rectangles are similar. Rectangle A has a width of 4. Rectangle B has a width of 12. If Rectangle A has a height of 5, what is the height of Rectangle B?",
+                        options: [
+                            "10",
+                            "20",
+                            "13",
+                            "15"
+                        ],
+                        correctIdx: 3,
+                        explanation: "The scale factor is 12/4 = 3. Multiply the height of A by 3: 5 × 3 = 15."
+                    },
+                    {
+                        id: 's3',
+                        text: "If ΔABC ~ ΔXYZ and Angle A is 40°, what is the measure of Angle X?",
+                        options: [
+                            "40°",
+                            "80°",
+                            "140°",
+                            "Cannot be determined"
+                        ],
+                        correctIdx: 0,
+                        explanation: "In similar triangles, corresponding angles are congruent (equal). Angle A corresponds to Angle X, so Angle X = 40°."
+                    }
+                ]
+            },
+            {
+                id: 'theorems',
+                title: 'Proportionality Theorems',
+                icon: '⚡',
+                description: 'Apply the Side-Splitter and Angle Bisector theorems to solve for x.',
+                theory: {
+                    intro: "Geometry has specific theorems regarding lines inside triangles that create predictable ratios.",
+                    rules: [
+                        { title: "Side-Splitter Theorem", text: "If a line is parallel to one side of a triangle and intersects the other two sides, it divides those sides proportionally (Top/Bottom = Top/Bottom)." },
+                        { title: "Triangle-Angle-Bisector", text: "If a ray bisects an angle, it divides the opposite side into segments proportional to the other two sides." }
+                    ],
+                    tip: "Set up a fraction! Left Top / Left Bottom = Right Top / Right Bottom."
+                },
+                visualizer: 'splitter',
+                questions: [
+                    {
+                        id: 'p1',
+                        text: "In a triangle, a line parallel to the base cuts the left side into segments of 4 and 6. The right side is cut into a top segment of 8 and a bottom segment of x. Solve for x.",
+                        options: [
+                            "x = 10",
+                            "x = 12",
+                            "x = 14",
+                            "x = 24"
+                        ],
+                        correctIdx: 1,
+                        explanation: "Using the Side-Splitter Theorem: 4/6 = 8/x. Cross multiply: 4x = 48. x = 12."
+                    },
+                    {
+                        id: 'p2',
+                        text: "An angle bisector cuts the opposite side into segments of lengths 3 and 5. The side adjacent to the length 3 segment is 9. What is the length of the other side?",
+                        options: [
+                            "12",
+                            "18",
+                            "15",
+                            "45"
+                        ],
+                        correctIdx: 2,
+                        explanation: "Using the Angle Bisector Theorem: Side1/Segment1 = Side2/Segment2. 9/3 = x/5. 3 = x/5. x = 15."
+                    },
+                    {
+                        id: 'p3',
+                        text: "Which theorem states: 'If three parallel lines intersect two transversals, then the segments intercepted on the transversals are proportional'?",
+                        options: [
+                            "Side-Splitter Theorem",
+                            "Corollary to Side-Splitter Theorem",
+                            "Angle Bisector Theorem",
+                            "Pythagorean Theorem"
+                        ],
+                        correctIdx: 1,
+                        explanation: "This is the Corollary to the Side-Splitter theorem (often called the Three Parallel Lines theorem)."
+                    }
+                ]
+            }
+        ];
+
+        // ==========================================
+        // COMPONENTS
+        // ==========================================
+
+        const DilationVisualizer = () => {
+            const [scale, setScale] = useState(1);
+            
+            return (
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center">
+                    <h3 className="text-sm font-bold text-indigo-600 mb-4 tracking-wide uppercase">Interactive Dilation Lab</h3>
+                    
+                    <div className="relative w-64 h-64 bg-slate-50 border border-slate-200 rounded-lg mb-6 overflow-hidden grid-bg">
+                        {/* Grid Lines */}
+                        <svg width="100%" height="100%" className="absolute top-0 left-0 opacity-20 pointer-events-none">
+                            <defs>
+                                <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                                    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="gray" strokeWidth="0.5"/>
+                                </pattern>
+                            </defs>
+                            <rect width="100%" height="100%" fill="url(#grid)" />
+                        </svg>
+
+                        {/* Center Point */}
+                        <div className="absolute top-1/2 left-1/2 w-2 h-2 bg-slate-900 rounded-full -ml-1 -mt-1 z-10"></div>
+                        <div className="absolute top-1/2 left-1/2 text-xs font-bold text-slate-500 ml-2 mt-2">Center</div>
+
+                        {/* Original Shape (Ghost) */}
+                        <div 
+                            className="absolute border-2 border-dashed border-slate-300"
+                            style={{
+                                width: '60px',
+                                height: '60px',
+                                top: 'calc(50% - 30px)',
+                                left: 'calc(50% - 30px)',
+                            }}
+                        ></div>
+
+                        {/* Dilated Shape */}
+                        <div 
+                            className="absolute bg-indigo-500/20 border-2 border-indigo-600 transition-all duration-300 ease-out flex items-center justify-center"
+                            style={{
+                                width: `${60 * scale}px`,
+                                height: `${60 * scale}px`,
+                                top: `calc(50% - ${30 * scale}px)`,
+                                left: `calc(50% - ${30 * scale}px)`,
+                            }}
+                        >
+                            <span className="text-indigo-800 font-bold text-xs bg-white/80 px-1 rounded">n={scale}</span>
+                        </div>
+                    </div>
+
+                    <div className="w-full max-w-xs space-y-2">
+                        <div className="flex justify-between text-sm font-medium text-slate-600">
+                            <span>Reduction (n&lt;1)</span>
+                            <span>Enlargement (n&gt;1)</span>
+                        </div>
+                        <input 
+                            type="range" 
+                            min="0.2" 
+                            max="3" 
+                            step="0.1" 
+                            value={scale}
+                            onChange={(e) => setScale(parseFloat(e.target.value))}
+                            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                        />
+                        <div className="text-center mt-2">
+                            <span className={`inline-block px-3 py-1 rounded-full text-sm font-bold ${scale === 1 ? 'bg-slate-100 text-slate-600' : scale > 1 ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
+                                {scale === 1 ? "Original Size" : scale > 1 ? "Enlargement" : "Reduction"}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const SplitterVisualizer = () => {
+            const [ratio, setRatio] = useState(0.5); // 0 to 1 position of parallel line
+
+            // Calculations for display
+            const topSide = (10 * ratio).toFixed(1);
+            const bottomSide = (10 * (1-ratio)).toFixed(1);
+            
+            // Assuming isosceles for simplicity in visualizer
+            const rightTop = (12 * ratio).toFixed(1);
+            const rightBottom = (12 * (1-ratio)).toFixed(1);
+
+            return (
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center">
+                    <h3 className="text-sm font-bold text-indigo-600 mb-4 tracking-wide uppercase">Side-Splitter Explorer</h3>
+                    
+                    <div className="relative w-64 h-64 mb-6">
+                        <svg width="100%" height="100%" viewBox="0 0 200 200">
+                            {/* Main Triangle */}
+                            <polygon points="100,20 20,180 180,180" fill="none" stroke="#334155" strokeWidth="2" />
+                            
+                            {/* Parallel Line */}
+                            <line 
+                                x1={100 - (80 * ratio)} 
+                                y1={20 + (160 * ratio)} 
+                                x2={100 + (80 * ratio)} 
+                                y2={20 + (160 * ratio)} 
+                                stroke="#4F46E5" 
+                                strokeWidth="3" 
+                                strokeDasharray="5,5"
+                            />
+                            
+                            {/* Labels */}
+                            <text x="35" y={20 + (160 * ratio) / 2} className="text-xs fill-slate-500 font-mono">{topSide}</text>
+                            <text x="150" y={20 + (160 * ratio) / 2} className="text-xs fill-slate-500 font-mono">{rightTop}</text>
+                            
+                            <text x="10" y={170} className="text-xs fill-slate-500 font-mono">{bottomSide}</text>
+                            <text x="185" y={170} className="text-xs fill-slate-500 font-mono">{rightBottom}</text>
+                        </svg>
+                    </div>
+
+                    <div className="w-full max-w-xs text-center space-y-4">
+                        <input 
+                            type="range" 
+                            min="0.2" 
+                            max="0.8" 
+                            step="0.05" 
+                            value={ratio}
+                            onChange={(e) => setRatio(parseFloat(e.target.value))}
+                            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                        />
+                        <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-100">
+                            <p className="text-xs text-indigo-600 uppercase font-bold mb-1">Check the Ratio:</p>
+                            <div className="flex justify-center items-center gap-4 text-sm font-mono text-slate-800">
+                                <div>{topSide} / {bottomSide} <br/>= {(topSide/bottomSide).toFixed(2)}</div>
+                                <span>≈</span>
+                                <div>{rightTop} / {rightBottom} <br/>= {(rightTop/rightBottom).toFixed(2)}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const Visualizer = ({ type }) => {
+            if (type === 'dilation') return <DilationVisualizer />;
+            if (type === 'splitter') return <SplitterVisualizer />;
+            return (
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center h-64">
+                     <div className="text-6xl mb-4">📐</div>
+                     <p className="text-slate-500">Visualization Mode</p>
+                </div>
+            );
+        };
+
+        // --- View Components ---
+
+        const HomeView = ({ onSelectTopic, overallScore }) => (
+            <div className="max-w-3xl mx-auto px-6 py-10 fade-in">
+                <header className="mb-12 text-center">
+                    <h1 className="text-4xl font-extrabold text-slate-900 mb-2 tracking-tight">Geometry Unit 3 Mastery</h1>
+                    <p className="text-slate-500 text-lg">Dilations, Similarity & Proportions</p>
+                    {overallScore > 0 && (
+                        <div className="mt-4 inline-flex items-center px-4 py-2 bg-yellow-100 text-yellow-800 rounded-full font-bold text-sm">
+                            🏆 Total Score: {overallScore} pts
+                        </div>
+                    )}
+                </header>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                    {curriculum.map(topic => (
+                        <button 
+                            key={topic.id}
+                            onClick={() => onSelectTopic(topic)}
+                            className="group relative bg-white p-8 rounded-3xl shadow-sm border border-slate-200 hover:shadow-xl hover:border-indigo-300 transition-all duration-300 text-left overflow-hidden"
+                        >
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+                            <span className="relative text-4xl mb-4 block group-hover:scale-110 transition-transform duration-300 origin-left">{topic.icon}</span>
+                            <h2 className="relative text-xl font-bold text-slate-900 mb-2 group-hover:text-indigo-600 transition-colors">{topic.title}</h2>
+                            <p className="relative text-slate-500 text-sm leading-relaxed">{topic.description}</p>
+                            <div className="mt-6 flex items-center text-indigo-600 font-bold text-sm">
+                                Start Module <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
+                            </div>
+                        </button>
+                    ))}
+                </div>
+            </div>
+        );
+
+        const LearnView = ({ topic, onStartPractice, onBack }) => (
+            <div className="max-w-4xl mx-auto px-4 py-8 fade-in h-screen flex flex-col">
+                <button onClick={onBack} className="self-start text-slate-400 hover:text-slate-700 font-medium mb-6 flex items-center transition-colors">
+                    ← Back to Dashboard
+                </button>
+
+                <div className="flex-1 grid lg:grid-cols-2 gap-8 items-start">
+                    {/* Theory Section */}
+                    <div className="space-y-6 overflow-y-auto pr-2 custom-scrollbar">
+                        <div>
+                            <div className="flex items-center gap-3 mb-2">
+                                <span className="text-3xl">{topic.icon}</span>
+                                <h2 className="text-3xl font-extrabold text-slate-900">{topic.title}</h2>
+                            </div>
+                            <p className="text-lg text-slate-600 leading-relaxed">{topic.theory.intro}</p>
+                        </div>
+
+                        <div className="space-y-4">
+                            {topic.theory.rules.map((rule, idx) => (
+                                <div key={idx} className="bg-white border-l-4 border-indigo-500 p-5 rounded-r-xl shadow-sm">
+                                    <h3 className="font-bold text-slate-900 mb-1">{rule.title}</h3>
+                                    <p className="text-slate-600 text-sm">{rule.text}</p>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="bg-amber-50 border border-amber-200 p-5 rounded-xl flex gap-4 items-start">
+                            <span className="text-2xl">💡</span>
+                            <div>
+                                <h4 className="font-bold text-amber-900 text-sm uppercase tracking-wide mb-1">Pro Tip</h4>
+                                <p className="text-amber-800 text-sm italic">{topic.theory.tip}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Interactive Section */}
+                    <div className="flex flex-col gap-6 sticky top-6">
+                        <Visualizer type={topic.visualizer} />
+                        
+                        <button 
+                            onClick={onStartPractice}
+                            className="w-full bg-indigo-600 text-white text-lg font-bold py-4 rounded-xl shadow-lg hover:bg-indigo-700 hover:shadow-xl hover:scale-[1.02] transition-all active:scale-95 flex items-center justify-center gap-3"
+                        >
+                            <span>Start Practice Quiz</span>
+                            <span className="bg-white/20 px-2 py-0.5 rounded text-sm">{topic.questions.length} Questions</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const PracticeView = ({ topic, onComplete, onBack }) => {
+            const [currentQIdx, setCurrentQIdx] = useState(0);
+            const [selectedOption, setSelectedOption] = useState(null);
+            const [isCorrect, setIsCorrect] = useState(null); // null, true, false
+            const [streak, setStreak] = useState(0);
+            const [score, setScore] = useState(0);
+
+            const question = topic.questions[currentQIdx];
+
+            const handleOptionSelect = (idx) => {
+                if (selectedOption !== null) return; // Prevent changing answer
+                setSelectedOption(idx);
+                
+                const correct = idx === question.correctIdx;
+                setIsCorrect(correct);
+
+                if (correct) {
+                    setScore(s => s + 100 + (streak * 10)); // Bonus for streak
+                    setStreak(s => s + 1);
+                } else {
+                    setStreak(0);
+                }
+            };
+
+            const handleNext = () => {
+                if (currentQIdx < topic.questions.length - 1) {
+                    setCurrentQIdx(c => c + 1);
+                    setSelectedOption(null);
+                    setIsCorrect(null);
+                } else {
+                    onComplete(score, topic.questions.length);
+                }
+            };
+
+            return (
+                <div className="max-w-2xl mx-auto px-6 py-10 fade-in min-h-screen flex flex-col justify-center">
+                    {/* Header Stats */}
+                    <div className="flex justify-between items-center mb-8">
+                        <button onClick={onBack} className="text-slate-400 hover:text-slate-600 font-medium text-sm">Cancel</button>
+                        <div className="flex gap-4">
+                            <div className="flex flex-col items-center">
+                                <span className="text-xs font-bold text-slate-400 uppercase">Streak</span>
+                                <span className="font-mono font-bold text-orange-500">🔥 {streak}</span>
+                            </div>
+                            <div className="flex flex-col items-center">
+                                <span className="text-xs font-bold text-slate-400 uppercase">Score</span>
+                                <span className="font-mono font-bold text-indigo-600">{score}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="w-full bg-slate-200 h-2 rounded-full mb-8 overflow-hidden">
+                        <div 
+                            className="bg-indigo-500 h-full transition-all duration-500"
+                            style={{ width: `${((currentQIdx + 1) / topic.questions.length) * 100}%` }}
+                        ></div>
+                    </div>
+
+                    {/* Question Card */}
+                    <div className="bg-white p-8 rounded-3xl shadow-lg border border-slate-100 mb-6">
+                        <span className="text-slate-400 font-bold text-xs uppercase tracking-widest mb-4 block">Question {currentQIdx + 1} of {topic.questions.length}</span>
+                        <h3 className="text-xl font-bold text-slate-900 leading-snug mb-8">{question.text}</h3>
+
+                        <div className="space-y-3">
+                            {question.options.map((opt, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => handleOptionSelect(idx)}
+                                    disabled={selectedOption !== null}
+                                    className={`w-full p-4 rounded-xl text-left font-medium transition-all duration-200 border-2 
+                                        ${selectedOption === null 
+                                            ? 'bg-slate-50 border-transparent hover:bg-indigo-50 hover:border-indigo-200 text-slate-700' 
+                                            : idx === question.correctIdx 
+                                                ? 'bg-green-50 border-green-500 text-green-800' 
+                                                : selectedOption === idx 
+                                                    ? 'bg-red-50 border-red-500 text-red-800'
+                                                    : 'bg-slate-50 border-transparent text-slate-400 opacity-50'
+                                        }
+                                    `}
+                                >
+                                    {opt}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Feedback Area */}
+                    {selectedOption !== null && (
+                        <div className={`p-6 rounded-2xl mb-6 fade-in border ${isCorrect ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                            <div className="flex items-center gap-3 mb-2">
+                                <span className="text-2xl">{isCorrect ? '🎉' : '🤔'}</span>
+                                <h4 className={`font-bold ${isCorrect ? 'text-green-800' : 'text-red-800'}`}>
+                                    {isCorrect ? 'Excellent!' : 'Not quite right.'}
+                                </h4>
+                            </div>
+                            <p className="text-slate-700 text-sm leading-relaxed mb-4">
+                                {question.explanation}
+                            </p>
+                            <button 
+                                onClick={handleNext}
+                                className="w-full bg-slate-900 text-white font-bold py-3 rounded-xl hover:bg-slate-800 transition-colors"
+                            >
+                                {currentQIdx < topic.questions.length - 1 ? 'Next Question' : 'See Results'}
+                            </button>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const ResultsView = ({ score, totalQs, onHome, onRetry }) => (
+            <div className="max-w-md mx-auto px-6 py-10 fade-in min-h-screen flex flex-col justify-center text-center">
+                <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
+                    <div className="text-6xl mb-6">🏆</div>
+                    <h2 className="text-3xl font-extrabold text-slate-900 mb-2">Module Complete!</h2>
+                    <p className="text-slate-500 mb-8">You've mastered these concepts.</p>
+                    
+                    <div className="bg-indigo-50 rounded-2xl p-6 mb-8">
+                        <span className="block text-slate-500 text-sm font-bold uppercase tracking-widest mb-1">Final Score</span>
+                        <span className="block text-5xl font-black text-indigo-600">{score}</span>
+                    </div>
+
+                    <div className="space-y-3">
+                        <button 
+                            onClick={onHome}
+                            className="w-full bg-slate-900 text-white py-4 rounded-xl font-bold hover:bg-slate-800 transition-colors"
+                        >
+                            Choose Another Topic
+                        </button>
+                        <button 
+                            onClick={onRetry}
+                            className="w-full bg-white text-slate-600 border border-slate-200 py-4 rounded-xl font-bold hover:bg-slate-50 transition-colors"
+                        >
+                            Retry This Module
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+
+        // ==========================================
+        // MAIN APP COMPONENT
+        // ==========================================
+
+        const App = () => {
+            const [view, setView] = useState('home'); // home, learn, practice, results
+            const [activeTopic, setActiveTopic] = useState(null);
+            const [sessionScore, setSessionScore] = useState(0);
+            const [totalScore, setTotalScore] = useState(0);
+
+            const handleSelectTopic = (topic) => {
+                setActiveTopic(topic);
+                setView('learn');
+            };
+
+            const handleStartPractice = () => {
+                setView('practice');
+            };
+
+            const handlePracticeComplete = (score, total) => {
+                setSessionScore(score);
+                setTotalScore(prev => prev + score);
+                setView('results');
+            };
+
+            const handleRetry = () => {
+                setView('practice'); // Resetting state happens inside PracticeView via key remount or internal state reset
+                // Simplified for this architecture: PracticeView will remount if we toggle view, or we can just rely on internal state
+                // Ideally, we force a remount.
+                setView('learn'); 
+                setTimeout(() => setView('practice'), 10);
+            };
+
+            return (
+                <div className="antialiased text-slate-900 bg-slate-50 min-h-screen selection:bg-indigo-200">
+                    {view === 'home' && (
+                        <HomeView onSelectTopic={handleSelectTopic} overallScore={totalScore} />
+                    )}
+                    
+                    {view === 'learn' && activeTopic && (
+                        <LearnView 
+                            topic={activeTopic} 
+                            onStartPractice={handleStartPractice}
+                            onBack={() => setView('home')}
+                        />
+                    )}
+
+                    {view === 'practice' && activeTopic && (
+                        <PracticeView 
+                            topic={activeTopic}
+                            onComplete={handlePracticeComplete}
+                            onBack={() => setView('learn')}
+                        />
+                    )}
+
+                    {view === 'results' && (
+                        <ResultsView 
+                            score={sessionScore}
+                            onHome={() => setView('home')}
+                            onRetry={handleRetry}
+                        />
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
